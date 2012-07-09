@@ -1,14 +1,21 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-15 -*-
+
 # Python library for sequencing events
 # mostly for sounds (e.g. making a beatbox)
 
 from time import time, sleep
 from thread import start_new_thread as threadit
-# TODO: find a better audio API !!!
-from winsound import PlaySound, SND_FILENAME, SND_NODEFAULT, SND_NOWAIT, \
-                     SND_NOSTOP, SND_ASYNC
+# TODO: find an effective audio API including a mixer !!!
+#from Cound_win import Sound
+#from Cound_pyaudio import Sound
+# actually pygame looks like the winner:
+from Cound_pygame import Sound
 
 class Sequencer(object):
-    
+    # print debug info
+    dbg = 0
+    #
     # this is the time resolution (its a bit optimistic, even more on windows)
     _TIME_RES = 0.001
     # sequencer speed: beats per minute
@@ -72,7 +79,8 @@ class Sequencer(object):
         print('[+] sequencer stopped')
     
     def play_sequence(self):
-        #print('[+] playing sequence %i' % self._seq_cnt)
+        if self.dbg > 0:
+            print('[+] playing sequence %i' % self._seq_cnt)
         # recompute sequence and step durations, and STEP_GRID
         self.update_internals()
         # initialize the list of played steps
@@ -97,32 +105,23 @@ class Sequencer(object):
         self._seq_cnt += 1
     
     def play_step(self, step=0):
-        #print('time %f :: step %i' % (time(), step))
+        if self.dbg > 1:
+            print('time %f :: step %i' % (time(), step))
         # go over all event from the STEP_GRID
         for evt in self.STEP_GRID[step]:
             if hasattr(evt, 'run'):
                 evt.run()
 
-###
-# The following is just given as example under windows
-# This is going to be updated to a better and cross-ptf python sound library
-class Sound(object):
-    
-    def __init__(self, sound_path='test.wav'):
-        self._path = sound_path
-    
-    def run(self):
-        flags = SND_FILENAME | SND_NODEFAULT | SND_ASYNC
-        threadit(PlaySound, (self._path, flags))
 
 # testing program non-interactively
-def test(num=5):
+def test(num=4):
     s = Sequencer()
     s.BEAT_NUM = 8
     s.EVENT_GRID = {
-        Sound('sounds/tamtam_1.wav') : [0, 2, 4, 6], 
-        Sound('sounds/percviet_6.wav') : [1, 3, 5.25, 5.5, 7],
-        Sound('sounds/guiro_4.wav') : [2.5, 6.5],
+        Sound('tamtam_1.wav') : [0, 2, 4, 6], 
+        Sound('percviet_6.wav') : [1, 3, 5.25, 5.5, 7],
+        Sound('guiro_4.wav') : [2.5, 6.5],
+        Sound('djembe_2.wav') : [0.75, 2.75, 4.5, 6.5, 7.25]
         }
     s.start()
     sleep(0.1)
